@@ -1,51 +1,48 @@
-import {config} from "@/config/app";
-import {TokenUtil} from "@/utils/token";
+import { config } from "@/config/app";
+import { TokenUtil } from "@/utils/token";
 
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-    let opts: RequestInit = {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    }
-
-    if (TokenUtil.accessToken) {
-        opts.headers = {
-            ...opts.headers,
+const authFetch = async (url: string, options: RequestInit = {}): Promise<any> => {
+    const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(TokenUtil.accessToken && {
             'Authorization': `Bearer ${TokenUtil.accessToken}`
-        }
+        })
+    };
+
+    const opts: RequestInit = {
+        ...options,
+        headers
+    };
+
+    const response = await fetch(config.baseUrl + url, opts);
+    const data = await response.json();
+
+    if (data?.statusCode === 401 || data?.message === 'Unauthorized') {
+        TokenUtil.clearAccessToken();
+        TokenUtil.clearRefreshToken();
+        window.location.href = '/login';
+        return;
     }
 
-    let req = await fetch(config.baseUrl + url, opts);
-    const resp = await req.json();
-
-    if (resp?.statusCode === 401 || resp?.message === 'Unauthorized') {
-            TokenUtil.clearAccessToken()
-            TokenUtil.persistToken()
-            window.location.href = '/login';
-            return ;
-    }
-
-    return resp;
-}
+    return data;
+};
 
 export const http = {
     fetch: async (url: string) => {
-        let opts: RequestInit = {
-            method: 'GET'
-        };
-
-        let resp = await authFetch(url, opts);
-        return resp
+        return await authFetch(url, { method: 'GET' });
     },
-    post: async (url: string, body: {}) => {
-        let opts: RequestInit = {
+
+    post: async (url: string, body: object) => {
+        return await authFetch(url, {
             method: 'POST',
             body: JSON.stringify(body)
-        }
+        });
+    },
 
-        let resp = await authFetch(url, opts)
-        return resp;
+    patch: async (url: string, body: object) => {
+        return await authFetch(url, {
+            method: 'PATCH',
+            body: JSON.stringify(body)
+        });
     }
-}
+};

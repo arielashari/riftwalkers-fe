@@ -20,20 +20,21 @@ import {authRepository} from "@/repository/auth";
 import {useToast} from "@/components/ui/use-toast";
 import {useRouter} from "next/navigation";
 import {TokenUtil} from "@/utils/token";
-import {store} from "@/store";
+import {useAuthStore} from "@/store";
 import {useEffect} from "react";
 
 
 export default function Login() {
     const router = useRouter()
     const { toast } = useToast();
+    const auth = useAuthStore()
 
     useEffect(() => {
         const refreshToken = async () => {
             if (TokenUtil.refreshToken) {
                 const resp = await authRepository.api.refreshToken();
                 if (resp.statusCode == '201') {
-                    TokenUtil.setRefreshToken(resp?.data?.access_token)
+                    TokenUtil.refreshToken = resp?.data?.access_token
                 }
             }
         }
@@ -41,21 +42,21 @@ export default function Login() {
     }, []);
 
     const formSchema = z.object({
-        email: z.string(),
+        username: z.string(),
         password: z.string()
     })
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: '',
+            username: '',
             password: '',
         },
     });
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
-            const resp = await store.auth.login(values.email, values.password)
+            await auth.login(values.username, values.password)
             toast({
                 title: 'Login Success'
             });
@@ -68,20 +69,6 @@ export default function Login() {
             });
             return;
         }
-        // console.log(resp)
-        // if (resp.statusCode != 200 || resp.statusCode != 201) {
-        //     toast({
-        //         variant: 'destructive',
-        //         title: resp?.message,
-        //     });
-        //     return;
-        // } else if (resp.statusCode == 200) {
-        //     toast({
-        //         title: 'Login Success'
-        //     });
-        //     router.push('/home')
-        //     return;
-        // }
     }
 
     return (
@@ -89,19 +76,19 @@ export default function Login() {
             <Card className="mx-auto max-w-sm">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold">Login</CardTitle>
-                    <CardDescription>Enter your email and password to login to your account</CardDescription>
+                    <CardDescription>Enter your username and password to login to your account</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)}>
                             <FormField control={form.control} render={({field}) => (
                                 <FormItem>
-                                    <FormLabel>Email</FormLabel>
+                                    <FormLabel>Username</FormLabel>
                                     <FormControl>
-                                        <Input type={'email'} placeholder={'m@example.com'} required {...field}></Input>
+                                        <Input type={'text'} placeholder={'m@example.com'} required {...field}></Input>
                                     </FormControl>
                                 </FormItem>
-                            )} name={'email'}>
+                            )} name={'username'}>
                             </FormField>
                             <FormField control={form.control} render={({field}) => (
                                 <FormItem>

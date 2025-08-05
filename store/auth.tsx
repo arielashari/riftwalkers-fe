@@ -1,50 +1,56 @@
 import { makeAutoObservable } from "mobx";
-import {TokenUtil} from "@/utils/token";
-import {authRepository} from "@/repository/auth";
-import {jwtDecode} from "jwt-decode";
+import { TokenUtil } from "@/utils/token";
+import { authRepository } from "@/repository/auth";
+import { jwtDecode } from "jwt-decode";
 
 export class AuthStore {
-  userData: {
-    role: string;
-    email: string;
-  } = {
-    role: "",
-    email: "",
+  userData = {
+    id: "",
+    playerId: ""
   };
 
   constructor() {
     makeAutoObservable(this);
 
-    if (TokenUtil.accessToken != null) {
-      this.setUserData(TokenUtil.accessToken);
+    // Load token from localStorage and set user
+    const accessToken = TokenUtil.accessToken;
+    if (accessToken) {
+      this.setUserData(accessToken);
     }
   }
 
   setUserData(accessToken: string) {
-    const decodedJwt = jwtDecode<{
-      role: string;
-      email: string;
-    }>(accessToken);
-
-    this.userData.role = decodedJwt?.role ?? "";
-    this.userData.email = decodedJwt?.email ?? "";
+    try {
+      const decodedJwt = jwtDecode<{ id: string, playerId: string }>(accessToken);
+      this.userData.id = decodedJwt?.id ?? "";
+      this.userData.playerId = decodedJwt?.playerId ?? "";
+    } catch (err) {
+      console.warn("Invalid JWT:", err);
+      this.userData.id = "";
+    }
   }
 
-  async login(email: string, password: string) {
-    const data = {
-      email: email,
-      password: password,
-    };
+  async login(username: string, password: string) {
+    const credentials = { username, password };
+    const response = await authRepository.api.login(credentials);
 
-    const req = await authRepository.api.login(data);
-    if (req.statusCode != 201) {
-      throw new Error(req?.message)
+    if (response.statusCode !== 201) {
+      throw new Error(response.message);
     }
-    TokenUtil.setAccessToken(req?.data?.access_token);
-    TokenUtil.setRefreshToken(req?.data?.refresh_token);
-    TokenUtil.persistToken();
-    this.setUserData(req?.data?.access_token);
 
-    return req;
+    const { accessToken, refreshToken } = response.data;
+
+    TokenUtil.accessToken = accessToken;
+    TokenUtil.refreshToken = refreshToken;
+    this.setUserData(accessToken);
+
+    return response;
+  }
+
+  logout() {
+    TokenUtil.clearAccessToken();
+    TokenUtil.clearRefreshToken();
+    this.userData.id = "";
+    window.location.href = '/login';
   }
 }

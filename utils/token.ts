@@ -1,51 +1,44 @@
 export class TokenUtil {
-    static accessToken?: string;
-    static refreshToken?: string;
-    static loadToken() {
-        if (typeof window === "undefined") {
-            return;
-        }
-
-        const accessToken = localStorage.getItem('access_token');
-        const refreshToken = localStorage.getItem('refresh_token');
-
-        if (accessToken) {
-            TokenUtil.setAccessToken(accessToken);
-        }
-
-        if (refreshToken) {
-            TokenUtil.setRefreshToken(refreshToken);
-        }
-    };
-
-    static persistToken() {
-        if (TokenUtil.accessToken != null) {
-            localStorage.setItem('access_token', TokenUtil.accessToken);
-        } else {
-            localStorage.removeItem('access_token');
-        }
-
-        if (TokenUtil.refreshToken != null) {
-            localStorage.setItem('refresh_token', TokenUtil.refreshToken);
-        } else {
-            localStorage.removeItem('refresh_token');
-        }
-
+    static get accessToken(): string | null {
+        if (typeof window === "undefined") return null;
+        return localStorage.getItem('accessToken');
     }
 
-    static setAccessToken(accessToken: string) {
-        TokenUtil.accessToken = accessToken;
+    static set accessToken(token: string | null) {
+        if (typeof window === "undefined") return;
+        if (token) {
+            localStorage.setItem('accessToken', token);
+        } else {
+            localStorage.removeItem('accessToken');
+        }
     }
 
-    static setRefreshToken(refreshToken: string) {
-        TokenUtil.refreshToken = refreshToken;
+    static get refreshToken(): string | null {
+        if (typeof window === "undefined") return null;
+        return localStorage.getItem('refreshToken');
+    }
+
+    static set refreshToken(token: string | null) {
+        if (typeof window === "undefined") return;
+        if (token) {
+            localStorage.setItem('refreshToken', token);
+        } else {
+            localStorage.removeItem('refreshToken');
+        }
     }
 
     static clearAccessToken() {
-        TokenUtil.accessToken = undefined;
+        this.accessToken = null;
     }
 
     static clearRefreshToken() {
-        TokenUtil.accessToken = undefined;
+        this.refreshToken = null;
+    }
+
+    static persistToken(accessToken: string, refreshToken?: string) {
+        this.accessToken = accessToken;
+        if (refreshToken !== undefined) {
+            this.refreshToken = refreshToken;
+        }
     }
 }

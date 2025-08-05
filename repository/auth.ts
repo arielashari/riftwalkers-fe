@@ -3,7 +3,7 @@ import {http} from "@/utils/http";
 import {TokenUtil} from "@/utils/token";
 
 interface LoginDto {
-    email: string;
+    username: string;
     password: string;
 }
 

@@ -9,6 +9,7 @@ import {RiftModal} from "@/components/Rift/RiftModal";
 import {playersRepository} from "@/repository/players";
 import {usePlayerStore} from "@/store";
 import {observer} from "mobx-react-lite";
+import {socket} from "@/app/socket";
 
 const MapView = observer(() => {
     const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -32,6 +33,41 @@ const MapView = observer(() => {
                 console.log(e);
             });
     }, [playerStore]);
+
+    useEffect(() => {
+        const init = async () => {
+            socket.on('connect', () => console.log('[WS] Connected'));
+            socket.on('disconnect', () => console.log('[WS] Disconnected'));
+
+            // ✅ Listen for HP updates
+            socket.on('player_hp_update', (payload: { playerId: string, currentHp: number, maxHp: number }) => {
+                console.log('[WS] player_hp_update received:', payload);
+                playerStore.setIsRegenerating(true)
+                playerStore.setCurrentHp(payload.currentHp);
+            });
+
+            // ✅ Emit only if not full HP and player ID exists
+            if (
+                playerStore.id &&
+                playerStore.currentHp < playerStore.maxHp
+            ) {
+                socket.emit('start_regenerate_hp', { playerId: playerStore.id });
+            }
+            else {
+                playerStore.setIsRegenerating(false)
+                socket.emit('stop_regenerate_hp', { playerId: playerStore.id })
+            }
+        };
+
+        init();
+
+        // ✅ Optional cleanup on unmount
+        return () => {
+            socket.off('connect');
+            socket.off('disconnect');
+            socket.off('player_hp_update');
+        };
+    }, [playerStore.currentHp, playerStore.maxHp, playerStore.id]);
 
     // Initialize Mapbox map
     useEffect(() => {

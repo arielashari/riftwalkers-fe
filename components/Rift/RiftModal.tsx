@@ -19,20 +19,12 @@ import {useRouter} from "next/navigation";
 type RiftModalProps = {
     open: boolean;
     onClose: () => void;
+    onEnter: () => void;
     data: Rift | null
 }
 
-export function RiftModal({ open, onClose, data }: RiftModalProps) {
-    const router = useRouter();
+export function RiftModal({ open, onClose, onEnter, data }: RiftModalProps) {
     if (!data) return null;
-
-    const handleEnter = async () => {
-        const res = await battlesRepository.api.createBattle(data.id)
-        if (res) {
-            console.log(res)
-            router.push(`/battle/${res.id}`)
-        }
-    }
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -120,7 +112,7 @@ export function RiftModal({ open, onClose, data }: RiftModalProps) {
                     <Button variant="outline" onClick={onClose} className="border-neutral-700 text-neutral-300 hover:bg-neutral-800">
                         Close
                     </Button>
-                    <Button variant="default" onClick={handleEnter} className="bg-green-600 hover:bg-green-700 text-white">
+                    <Button variant="default" onClick={onEnter} className="bg-green-600 hover:bg-green-700 text-white">
                         Enter
                     </Button>
                 </DialogFooter>

@@ -10,8 +10,11 @@ import {playersRepository} from "@/repository/players";
 import {usePlayerStore} from "@/store";
 import {observer} from "mobx-react-lite";
 import {socket} from "@/app/socket";
+import {battlesRepository} from "@/repository/battles";
+import {useRouter} from "next/navigation";
 
 const MapView = observer(() => {
+    const router = useRouter();
     const mapRef = useRef<mapboxgl.Map | null>(null);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const riftMarkersRef = useRef<mapboxgl.Marker[]>([]);
@@ -22,6 +25,16 @@ const MapView = observer(() => {
     const [mapLoaded, setMapLoaded] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRift, setSelectedRift] = useState<Rift | null>(null);
+
+    const handleEnter = async () => {
+        if (selectedRift === null) return;
+        const res = await battlesRepository.api.createBattle(selectedRift.id)
+        if (res) {
+            socket.emit('stop_regenerate_hp', { playerId: playerStore.id })
+            router.push(`/battle/${res.id}`)
+        }
+    }
+
 
     // Fetch player info
     useEffect(() => {
@@ -155,6 +168,7 @@ const MapView = observer(() => {
             <RiftModal
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                onEnter={handleEnter}
                 data={selectedRift}
             />
             <div

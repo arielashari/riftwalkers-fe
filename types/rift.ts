@@ -1,7 +1,7 @@
 export type Rift = {
     id: string
     name: string
-    difficulty: string
+    difficulty: RiftDifficulty
     status: string
     rewards: Array<{
         quantity: number
@@ -20,10 +20,4 @@ export type Rift = {
     }>
 }
 
-export const RiftDifficulty = {
-    EASY: 'Easy',
-    MEDIUM: 'Medium',
-    HARD: 'Hard',
-    VERY_HARD: 'Very Hard',
-    EXTREME: 'Extreme'
-}
+export type RiftDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'VERY_HARD' | 'EXTREME';

@@ -36,47 +36,53 @@ export function RiftModal({ open, onClose, data }: RiftModalProps) {
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="bg-neutral-900/95 backdrop-blur-md border border-neutral-700 shadow-xl sm:max-w-[500px] text-white">
                 <DialogHeader>
-                    <DialogTitle>{data.name}</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-xl text-white">{data.name}</DialogTitle>
+                    <DialogDescription className="text-sm text-neutral-400">
                         View rift details and potential rewards.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid gap-4">
+                <div className="grid gap-4 mt-2">
+                    {/* Difficulty */}
                     <div className="grid gap-1">
-                        <Label className="text-muted-foreground">Difficulty</Label>
+                        <Label className="text-neutral-400">Difficulty</Label>
                         <span
                             className={cn(
                                 "w-fit px-2 py-1 rounded text-sm font-medium",
-                                data.difficulty === "EXTREME" && "bg-red-100 text-red-700",
-                                data.difficulty === "HARD" && "bg-yellow-100 text-yellow-700",
-                                data.difficulty === "NORMAL" && "bg-blue-100 text-blue-700"
+                                data.difficulty === "EASY" && "bg-green-500/20 text-green-400",
+                                data.difficulty === "MEDIUM" && "bg-blue-500/20 text-blue-400",
+                                data.difficulty === "HARD" && "bg-yellow-500/20 text-yellow-400",
+                                data.difficulty === "VERY_HARD" && "bg-red-500/20 text-red-400",
+                                data.difficulty === "EXTREME" && "bg-purple-500/20 text-purple-400"
                             )}
                         >
-              {data.difficulty}
-            </span>
+        {data.difficulty.replace('_', ' ')}
+    </span>
                     </div>
 
+
+                    {/* Status */}
                     <div className="grid gap-1">
-                        <Label className="text-muted-foreground">Status</Label>
+                        <Label className="text-neutral-400">Status</Label>
                         <span
                             className={cn(
                                 "w-fit px-2 py-1 rounded text-sm font-medium",
-                                data.status === "OPEN" && "bg-green-100 text-green-800",
-                                data.status === "CLOSED" && "bg-gray-100 text-gray-600"
+                                data.status === "OPEN" && "bg-green-500/20 text-green-400",
+                                data.status === "CLOSED" && "bg-neutral-500/20 text-neutral-400"
                             )}
                         >
-              {data.status}
-            </span>
+                        {data.status}
+                    </span>
                     </div>
 
+                    {/* Rewards */}
                     <div className="grid gap-2">
-                        <Label className="text-muted-foreground">Rewards</Label>
+                        <Label className="text-neutral-400">Rewards</Label>
                         <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                             {data.rewards.map((reward, index) => (
-                                <div key={index} className="flex items-start gap-3 rounded border p-3">
+                                <div key={index} className="flex items-start gap-3 rounded border border-neutral-700 p-3 bg-neutral-800/60">
                                     <img
                                         src={reward.item.iconUrl}
                                         alt={reward.item.name}
@@ -84,19 +90,19 @@ export function RiftModal({ open, onClose, data }: RiftModalProps) {
                                     />
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2">
-                      <span
-                          className={cn(
-                              "text-sm font-medium",
-                              reward.item.rarity === "LEGEND" && "text-purple-600",
-                              reward.item.rarity === "COMMON" && "text-gray-600"
-                          )}
-                      >
-                        {reward.item.name} x{reward.quantity}
-                      </span>
-                                            <span className="text-xs text-muted-foreground">{reward.item.type}</span>
+                                        <span
+                                            className={cn(
+                                                "text-sm font-medium",
+                                                reward.item.rarity === "LEGEND" && "text-purple-400",
+                                                reward.item.rarity === "COMMON" && "text-gray-300"
+                                            )}
+                                        >
+                                            {reward.item.name} x{reward.quantity}
+                                        </span>
+                                            <span className="text-xs text-neutral-400">{reward.item.type}</span>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">{reward.item.description}</p>
-                                        <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-2">
+                                        <p className="text-xs text-neutral-400">{reward.item.description}</p>
+                                        <div className="text-xs text-neutral-400 mt-1 flex flex-wrap gap-2">
                                             {reward.item.hpBonus !== 0 && <span>HP +{reward.item.hpBonus}</span>}
                                             {reward.item.strBonus !== 0 && <span>STR +{reward.item.strBonus}</span>}
                                             {reward.item.agiBonus !== 0 && <span>AGI +{reward.item.agiBonus}</span>}
@@ -111,10 +117,10 @@ export function RiftModal({ open, onClose, data }: RiftModalProps) {
                 </div>
 
                 <DialogFooter className="pt-4">
-                    <Button variant="outline" onClick={onClose}>
+                    <Button variant="outline" onClick={onClose} className="border-neutral-700 text-neutral-300 hover:bg-neutral-800">
                         Close
                     </Button>
-                    <Button variant="default" onClick={handleEnter}>
+                    <Button variant="default" onClick={handleEnter} className="bg-green-600 hover:bg-green-700 text-white">
                         Enter
                     </Button>
                 </DialogFooter>

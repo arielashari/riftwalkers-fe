@@ -98,6 +98,7 @@ const MapView = observer(() => {
                 EXTREME: '#9C27B0',    // Purple
             };
 
+            // @ts-ignore
             const markerColor = colorMap[rift.difficulty] || '#607D8B'; // Fallback: blue-gray
 
             const marker = new mapboxgl.Marker({ color: markerColor })

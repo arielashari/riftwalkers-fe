@@ -20,6 +20,7 @@ export class PlayerStore {
     attack: number = 0;
     defense: number = 0;
     nextLevelXp: number = 0;
+    isRegenerating: boolean = false;
 
     constructor() {
         makeAutoObservable(this);
@@ -35,6 +36,10 @@ export class PlayerStore {
 
     setCurrentMana = (mana: number) => {
         this.currentMana = mana;
+    }
+
+    setIsRegenerating = (isRegenerating: boolean) => {
+        this.isRegenerating = isRegenerating;
     }
 
     clear = () => {

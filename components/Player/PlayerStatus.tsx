@@ -3,9 +3,10 @@
 import { usePlayerStore } from "@/store";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {observer} from "mobx-react-lite";
+import {cn} from "@/lib/utils";
 
 const PlayerStatus = observer(() => {
-    const playerStore = usePlayerStore()
+    const playerStore = usePlayerStore();
 
     const bars = [
         { label: "HP", value: playerStore.currentHp, max: playerStore.maxHp, color: "bg-red-500", labelColor: "text-red-300" },
@@ -14,7 +15,12 @@ const PlayerStatus = observer(() => {
     ];
 
     return (
-        <div className="absolute top-4 left-4 right-4 z-20 bg-black/80 backdrop-blur-md px-4 pt-4 pb-3 rounded-xl shadow-lg border border-white/10 max-w-md mx-auto">
+        <div
+            className={cn(
+                "absolute top-4 left-4 right-4 z-20 bg-black/80 backdrop-blur-md px-4 pt-4 pb-3 rounded-xl shadow-lg border border-white/10 max-w-md mx-auto",
+                playerStore.isRegenerating && "ring-2 ring-red-400/50 animate-pulse"
+            )}
+        >
             <div className="flex items-center gap-3">
                 <Avatar className="w-12 h-12 border-2 border-white/30 shadow">
                     <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop" />

@@ -57,6 +57,10 @@ const MapView = observer(() => {
                 console.log('[WS] player_hp_update received:', payload);
                 playerStore.setIsRegenerating(true)
                 playerStore.setCurrentHp(payload.currentHp);
+                if (payload.currentHp === payload.maxHp) {
+                    playerStore.setIsRegenerating(false)
+                    socket.emit('stop_regenerate_hp', { playerId: playerStore.id })
+                }
             });
 
             // ✅ Emit only if not full HP and player ID exists
@@ -65,8 +69,7 @@ const MapView = observer(() => {
                 playerStore.currentHp < playerStore.maxHp
             ) {
                 socket.emit('start_regenerate_hp', { playerId: playerStore.id });
-            }
-            else {
+            } else {
                 playerStore.setIsRegenerating(false)
                 socket.emit('stop_regenerate_hp', { playerId: playerStore.id })
             }

@@ -240,7 +240,7 @@ const BattleScene = observer(() => {
                 {/* Characters */}
                 <div className="absolute bottom-62 left-1/2 -translate-x-1/2 w-full max-w-[640px] flex justify-between items-end gap-4 px-4 sm:px-8">
                     <div className="flex flex-col items-center text-white">
-                        <div className="text-lg font-bold mb-1">Player</div>
+                        <div className="text-lg font-bold mb-1 text-black">{player.nickname}</div>
                         <div className="w-32 h-4 bg-gray-700 rounded">
                             <div className="bg-green-500 h-4 rounded" style={{ width: `${(currentHp / maxHp) * 100}%` }} />
                         </div>
@@ -258,7 +258,7 @@ const BattleScene = observer(() => {
                                 className="flex flex-col items-center text-white cursor-pointer"
                                 onClick={() => setSelectedMobId(mob.id)}
                             >
-                                <div className="text-lg font-bold mb-1">{mob.name}</div>
+                                <div className="text-lg font-bold mb-1 text-black">{mob.name}</div>
                                 <div className="w-32 h-4 bg-gray-700 rounded">
                                     <div
                                         className="bg-red-500 h-4 rounded"

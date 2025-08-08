@@ -7,6 +7,10 @@ import {useEffect, useState} from "react";
 import {playersRepository} from "@/repository/players";
 import {usePlayerStore} from "@/store";
 import {observer} from "mobx-react-lite";
+import AgilityIcon from "@/public/PlayerStat/Agility.png"
+import IntelligenceIcon from "@/public/PlayerStat/Intelligence.png"
+import AttackIcon from "@/public/PlayerStat/Attack.png"
+import Image from "next/image";
 
 type StatsSheetProps = {
     open: boolean;
@@ -119,7 +123,10 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
                             </div>
                         </div>
                         <div className="bg-white/10 p-3 rounded-lg">
-                            <div className="text-gray-400 text-xs mb-1">Agility</div>
+                            <div className="text-gray-400 text-xs mb-1">
+                                <Image src={AgilityIcon} alt="AgilityIcon" className="w-6 h-6 inline-block"/>
+                                Agility
+                            </div>
                             <div className="text-lg font-medium flex items-center justify-between">
                                 {stats.agi}
                                 <div className="flex gap-2">
@@ -139,7 +146,10 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
                             </div>
                         </div>
                         <div className="bg-white/10 p-3 rounded-lg">
-                            <div className="text-gray-400 text-xs mb-1">Intelligence</div>
+                            <div className="text-gray-400 text-xs mb-1">
+                                <Image src={IntelligenceIcon} alt="IntelligenceIcon" className="w-6 h-6 inline-block"/>
+                                Intelligence
+                            </div>
                             <div className="text-lg font-medium flex items-center justify-between">
                                 {stats.int}
                                 <div className="flex gap-2">
@@ -185,7 +195,10 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
                     <h2 className="text-sm font-medium text-gray-200 mb-4">Derived Stats</h2>
                     <div className="space-y-3">
                         <div className="bg-white/10 p-3 rounded-lg flex justify-between items-center">
-                            <div className="text-gray-400">Attack</div>
+                            <div className="text-gray-400">
+                                <Image src={AttackIcon} alt="AttackIcon" className="w-6 h-6 inline-block"/>
+                                Attack
+                            </div>
                             <div className="font-medium">{playerStore.attack}</div>
                         </div>
                         <div className="bg-white/10 p-3 rounded-lg flex justify-between items-center">

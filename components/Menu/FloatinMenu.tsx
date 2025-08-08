@@ -6,7 +6,7 @@ import {
     X,
     Backpack,
     User,
-    MapPin,
+    Clipboard,
     Trophy,
     Settings,
 } from 'lucide-react';
@@ -16,7 +16,7 @@ import InventorySheet from "@/components/Menu/Inventory/InventorySheet";
 import StatsSheet from "@/components/Menu/Stats/StatsSheet";
 
 export default function FloatingMenu() {
-    const [activeMenu, setActiveMenu] = useState<null | "inventory" | "menu" | "stats" | "nearby" | "achievements" | "settings">(null);
+    const [activeMenu, setActiveMenu] = useState<null | "inventory" | "menu" | "stats" | "quest" | "achievements" | "settings">(null);
 
     const menuItems = [
         {
@@ -32,10 +32,10 @@ export default function FloatingMenu() {
             onClick: () => setActiveMenu("stats"),
         },
         {
-            icon: MapPin,
-            label: "Nearby",
-            id: "nearby",
-            onClick: () => setActiveMenu("nearby"),
+            icon: Clipboard,
+            label: "Quest",
+            id: "quest",
+            onClick: () => setActiveMenu("quest"),
         },
         {
             icon: Trophy,

@@ -6,7 +6,7 @@ import "./globals.css";
 import {Toaster} from "@/components/ui/toaster";
 import {TokenUtil} from "@/utils/token";
 import {useEffect} from "react";
-import {StoreProvider} from "@/store";
+import {StoreProvider, usePlayerStore} from "@/store";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,7 +15,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
     return (
       <StoreProvider>
           <html lang="en">

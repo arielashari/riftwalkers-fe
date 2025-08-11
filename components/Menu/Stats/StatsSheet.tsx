@@ -10,6 +10,12 @@ import {observer} from "mobx-react-lite";
 import AgilityIcon from "@/public/PlayerStat/Agility.png"
 import IntelligenceIcon from "@/public/PlayerStat/Intelligence.png"
 import AttackIcon from "@/public/PlayerStat/Attack.png"
+import DefenseIcon from "@/public/PlayerStat/Defense.png"
+import HPIcon from "@/public/PlayerStat/HP.png"
+import ManaIcon from "@/public/PlayerStat/Mana.png"
+import StrengthIcon from "@/public/PlayerStat/Strength.png"
+import VitalityIcon from "@/public/PlayerStat/Vitality.png"
+import DexterityIcon from "@/public/PlayerStat/Dexterity.png"
 import Image from "next/image";
 
 type StatsSheetProps = {
@@ -22,6 +28,7 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
     const [stats, setStats] = useState({
         str: playerStore.str,
         agi: playerStore.agi,
+        dex: playerStore.dex,
         int: playerStore.int,
         vit: playerStore.vit
     });
@@ -30,15 +37,16 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
 
     useEffect(() => {
         // Sync once the store has valid values
-        if (playerStore.str !== 0 || playerStore.agi !== 0 || playerStore.int !== 0 || playerStore.vit !== 0) {
+        if (playerStore.str !== 0 || playerStore.agi !== 0 || playerStore.dex !== 0 || playerStore.int !== 0 || playerStore.vit !== 0) {
             setStats({
                 str: playerStore.str,
                 agi: playerStore.agi,
+                dex: playerStore.dex,
                 int: playerStore.int,
                 vit: playerStore.vit
             });
         }
-    }, [playerStore.str, playerStore.agi, playerStore.int, playerStore.vit]);
+    }, [playerStore.str, playerStore.agi,playerStore.dex, playerStore.int, playerStore.vit]);
 
 
     const handleIncrement = (stat: keyof typeof stats) => {
@@ -80,9 +88,7 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
         try {
             setIsLoading(true);
             await playersRepository.api.updateStats(statDeltas);
-            playerStore.clear();
-            const resp = await playersRepository.api.getPlayers();
-            playerStore.setPlayer(resp.data);
+            playerStore.loadPlayer()
             onClose();
         } catch (error) {
             console.error(error);
@@ -103,7 +109,10 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
                     <h2 className="text-sm font-medium text-gray-200 mb-4">Base Stats</h2>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white/10 p-3 rounded-lg">
-                            <div className="text-gray-400 text-xs mb-1">Strength</div>
+                            <div className="text-gray-400 text-xs mb-1">
+                                <Image src={StrengthIcon} alt="StrengthIcon" className="w-6 h-6 inline-block"/>
+                                Strength
+                            </div>
                             <div className="text-lg font-medium flex items-center justify-between">
                                 {stats.str}
                                 <div className="flex gap-2">
@@ -147,6 +156,29 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
                         </div>
                         <div className="bg-white/10 p-3 rounded-lg">
                             <div className="text-gray-400 text-xs mb-1">
+                                <Image src={DexterityIcon} alt="DexterityIcon" className="w-6 h-6 inline-block"/>
+                                Dexterity
+                            </div>
+                            <div className="text-lg font-medium flex items-center justify-between">
+                                {stats.dex}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleDecrement('dex')}
+                                        className="px-2 text-sm bg-white/20 rounded"
+                                        disabled={stats.dex <= playerStore.dex}
+                                    >-
+                                    </button>
+                                    <button
+                                        onClick={() => handleIncrement('agi')}
+                                        className="px-2 text-sm bg-white/20 rounded"
+                                        disabled={remainingPoints <= 0}
+                                    >+
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white/10 p-3 rounded-lg">
+                            <div className="text-gray-400 text-xs mb-1">
                                 <Image src={IntelligenceIcon} alt="IntelligenceIcon" className="w-6 h-6 inline-block"/>
                                 Intelligence
                             </div>
@@ -169,7 +201,10 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
                             </div>
                         </div>
                         <div className="bg-white/10 p-3 rounded-lg">
-                            <div className="text-gray-400 text-xs mb-1">Vitality</div>
+                            <div className="text-gray-400 text-xs mb-1">
+                                <Image src={VitalityIcon} alt="VitalityIcon" className="w-6 h-6 inline-block"/>
+                                Vitality
+                            </div>
                             <div className="text-lg font-medium flex items-center justify-between">
                                 {stats.vit}
                                 <div className="flex gap-2">
@@ -202,15 +237,24 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
                             <div className="font-medium">{playerStore.attack}</div>
                         </div>
                         <div className="bg-white/10 p-3 rounded-lg flex justify-between items-center">
-                            <div className="text-gray-400">Defense</div>
+                            <div className="text-gray-400">
+                                <Image src={DefenseIcon} alt="DefenseIcon" className="w-6 h-6 inline-block"/>
+                                Defense
+                            </div>
                             <div className="font-medium">{playerStore.defense}</div>
                         </div>
                         <div className="bg-white/10 p-3 rounded-lg flex justify-between items-center">
-                            <div className="text-gray-400">HP</div>
+                            <div className="text-gray-400">
+                                <Image src={HPIcon} alt="HPIcon" className="w-6 h-6 inline-block"/>
+                                HP
+                            </div>
                             <div className="font-medium">{playerStore.currentHp} / {playerStore.maxHp}</div>
                         </div>
                         <div className="bg-white/10 p-3 rounded-lg flex justify-between items-center">
-                            <div className="text-gray-400">Mana</div>
+                            <div className="text-gray-400">
+                                <Image src={ManaIcon} alt="ManaIcon" className="w-6 h-6 inline-block"/>
+                                Mana
+                            </div>
                             <div className="font-medium">{playerStore.currentMana} / {playerStore.maxMana}</div>
                         </div>
                     </div>

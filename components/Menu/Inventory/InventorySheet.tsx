@@ -5,13 +5,16 @@ import {InventoryItem, rarityColors} from "@/types/item";
 import { ScrollArea } from "../../ui/scroll-area";
 import {useEffect, useState} from "react";
 import {playersRepository} from "@/repository/players";
+import {usePlayerStore} from "@/store";
+import {observer} from "mobx-react-lite";
 
 type InventorySheetProps = {
     open: boolean;
     onClose: () => void;
 }
 
-const InventorySheet = ({ open, onClose }: InventorySheetProps) => {
+const InventorySheet = observer(({ open, onClose }: InventorySheetProps) => {
+    const playerStore = usePlayerStore();
     const { data: inventory, isLoading, mutate } = playersRepository.hooks.useGetInventory();
     const equipItem = playersRepository.hooks.useEquipItem();
 
@@ -24,6 +27,7 @@ const InventorySheet = ({ open, onClose }: InventorySheetProps) => {
         try {
             await equipItem.trigger({ itemId, isEquipped });
             mutate(); // refresh inventory after successful equip
+            playerStore.loadPlayer()
         } catch (err) {
             console.error("Failed to equip item", err);
         }
@@ -91,6 +95,6 @@ const InventorySheet = ({ open, onClose }: InventorySheetProps) => {
             </SheetContent>
         </Sheet>
     );
-};
+});
 
 export default InventorySheet;

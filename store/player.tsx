@@ -1,5 +1,6 @@
 // stores/PlayerStore.ts
 import { makeAutoObservable } from "mobx";
+import {playersRepository} from "@/repository/players";
 
 export class PlayerStore {
     id: string = "";
@@ -13,6 +14,7 @@ export class PlayerStore {
     skillPoints: number = 0;
     str: number = 0;
     agi: number = 0;
+    dex: number = 0;
     int: number = 0;
     vit: number = 0;
     maxHp: number = 100;
@@ -21,6 +23,9 @@ export class PlayerStore {
     defense: number = 0;
     nextLevelXp: number = 0;
     isRegenerating: boolean = false;
+    isLoading: boolean = false;
+    latitude: number = 0;
+    longitude: number = 0;
 
     constructor() {
         makeAutoObservable(this);
@@ -54,6 +59,7 @@ export class PlayerStore {
         this.skillPoints = 0;
         this.str = 0;
         this.agi = 0;
+        this.dex = 0;
         this.int = 0;
         this.vit = 0;
         this.maxHp = 100;
@@ -61,5 +67,23 @@ export class PlayerStore {
         this.attack = 0;
         this.defense = 0;
         this.nextLevelXp = 0;
+    }
+
+    setCurrentLocation = (lat: number, lng: number) => {
+        this.latitude = lat;
+        this.longitude = lng;
+    }
+
+    loadPlayer = () => {
+        this.isLoading = true;
+        playersRepository.api.getPlayers()
+            .then(resp => {
+                this.clear();
+                this.setPlayer(resp.data);
+                this.isLoading = false;
+            })
+            .catch(e => {
+                console.log(e);
+            });
     }
 }

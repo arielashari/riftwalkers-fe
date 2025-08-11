@@ -14,8 +14,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import InventorySheet from "@/components/Menu/Inventory/InventorySheet";
 import StatsSheet from "@/components/Menu/Stats/StatsSheet";
+import {useRouter} from "next/navigation";
 
 export default function FloatingMenu() {
+    const router = useRouter();
     const [activeMenu, setActiveMenu] = useState<null | "inventory" | "menu" | "stats" | "quest" | "achievements" | "settings">(null);
 
     const menuItems = [
@@ -35,7 +37,7 @@ export default function FloatingMenu() {
             icon: Clipboard,
             label: "Quest",
             id: "quest",
-            onClick: () => setActiveMenu("quest"),
+            onClick: () => router.push("/quest"),
         },
         {
             icon: Trophy,

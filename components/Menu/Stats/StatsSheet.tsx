@@ -15,6 +15,7 @@ import HPIcon from "@/public/PlayerStat/HP.png"
 import ManaIcon from "@/public/PlayerStat/Mana.png"
 import StrengthIcon from "@/public/PlayerStat/Strength.png"
 import VitalityIcon from "@/public/PlayerStat/Vitality.png"
+import DexterityIcon from "@/public/PlayerStat/Dexterity.png"
 import Image from "next/image";
 
 type StatsSheetProps = {
@@ -27,6 +28,7 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
     const [stats, setStats] = useState({
         str: playerStore.str,
         agi: playerStore.agi,
+        dex: playerStore.dex,
         int: playerStore.int,
         vit: playerStore.vit
     });
@@ -35,15 +37,16 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
 
     useEffect(() => {
         // Sync once the store has valid values
-        if (playerStore.str !== 0 || playerStore.agi !== 0 || playerStore.int !== 0 || playerStore.vit !== 0) {
+        if (playerStore.str !== 0 || playerStore.agi !== 0 || playerStore.dex !== 0 || playerStore.int !== 0 || playerStore.vit !== 0) {
             setStats({
                 str: playerStore.str,
                 agi: playerStore.agi,
+                dex: playerStore.dex,
                 int: playerStore.int,
                 vit: playerStore.vit
             });
         }
-    }, [playerStore.str, playerStore.agi, playerStore.int, playerStore.vit]);
+    }, [playerStore.str, playerStore.agi,playerStore.dex, playerStore.int, playerStore.vit]);
 
 
     const handleIncrement = (stat: keyof typeof stats) => {
@@ -85,9 +88,7 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
         try {
             setIsLoading(true);
             await playersRepository.api.updateStats(statDeltas);
-            playerStore.clear();
-            const resp = await playersRepository.api.getPlayers();
-            playerStore.setPlayer(resp.data);
+            playerStore.loadPlayer()
             onClose();
         } catch (error) {
             console.error(error);
@@ -142,6 +143,29 @@ const StatsSheet = observer(({open, onClose}: StatsSheetProps) => {
                                         onClick={() => handleDecrement('agi')}
                                         className="px-2 text-sm bg-white/20 rounded"
                                         disabled={stats.agi <= playerStore.agi}
+                                    >-
+                                    </button>
+                                    <button
+                                        onClick={() => handleIncrement('agi')}
+                                        className="px-2 text-sm bg-white/20 rounded"
+                                        disabled={remainingPoints <= 0}
+                                    >+
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white/10 p-3 rounded-lg">
+                            <div className="text-gray-400 text-xs mb-1">
+                                <Image src={DexterityIcon} alt="DexterityIcon" className="w-6 h-6 inline-block"/>
+                                Dexterity
+                            </div>
+                            <div className="text-lg font-medium flex items-center justify-between">
+                                {stats.dex}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleDecrement('dex')}
+                                        className="px-2 text-sm bg-white/20 rounded"
+                                        disabled={stats.dex <= playerStore.dex}
                                     >-
                                     </button>
                                     <button

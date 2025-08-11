@@ -117,7 +117,10 @@ const MapView = observer(() => {
 
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
-                (pos) => initializeMap(pos.coords.longitude, pos.coords.latitude),
+                (pos) => {
+                    playerStore.setCurrentLocation(pos.coords.latitude, pos.coords.longitude)
+                    initializeMap(pos.coords.longitude, pos.coords.latitude)
+                },
                 (err) => {
                     console.error('Error getting location:', err);
                     initializeMap(-74.0242, 40.6941); // fallback location

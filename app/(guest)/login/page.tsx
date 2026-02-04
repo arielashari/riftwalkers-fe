@@ -94,7 +94,7 @@ export default function Login() {
                                 <FormItem>
                                     <FormLabel>Password</FormLabel>
                                     <FormControl>
-                                        <Input type={'password'} required {...field} Only></Input>
+                                        <Input type={'password'} required {...field} readOnly></Input>
                                     </FormControl>
                                 </FormItem>
                             )} name={'password'}>

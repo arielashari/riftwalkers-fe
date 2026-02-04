@@ -16,12 +16,12 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import {authRepository} from "@/repository/auth";
-import {useToast} from "@/components/ui/use-toast";
-import {useRouter} from "next/navigation";
-import {TokenUtil} from "@/utils/token";
-import {useAuthStore} from "@/store";
-import {useEffect} from "react";
+import { authRepository } from "@/repository/auth";
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { TokenUtil } from "@/utils/token";
+import { useAuthStore } from "@/store";
+import { useEffect } from "react";
 
 
 export default function Login() {
@@ -49,8 +49,8 @@ export default function Login() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            username: '',
-            password: '',
+            username: 'ariel',
+            password: 'password',
         },
     });
 
@@ -62,7 +62,7 @@ export default function Login() {
             });
             router.push('/')
             return;
-        }catch (e: any) {
+        } catch (e: any) {
             toast({
                 variant: 'destructive',
                 title: e?.message,
@@ -81,20 +81,20 @@ export default function Login() {
                 <CardContent>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)}>
-                            <FormField control={form.control} render={({field}) => (
+                            <FormField control={form.control} render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Username</FormLabel>
                                     <FormControl>
-                                        <Input type={'text'} placeholder={'m@example.com'} required {...field}></Input>
+                                        <Input type={'text'} placeholder={'m@example.com'} required {...field} readOnly></Input>
                                     </FormControl>
                                 </FormItem>
                             )} name={'username'}>
                             </FormField>
-                            <FormField control={form.control} render={({field}) => (
+                            <FormField control={form.control} render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Password</FormLabel>
                                     <FormControl>
-                                        <Input type={'password'} required {...field}></Input>
+                                        <Input type={'password'} required {...field} Only></Input>
                                     </FormControl>
                                 </FormItem>
                             )} name={'password'}>

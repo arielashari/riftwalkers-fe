@@ -21,12 +21,18 @@ export class Game extends Scene {
   private player!: Phaser.GameObjects.Sprite;
   private playerNameText!: Phaser.GameObjects.Text;
   private playerHpBar!: Phaser.GameObjects.Rectangle;
+  private playerHpBarBg!: Phaser.GameObjects.Rectangle;
   private playerManaBar!: Phaser.GameObjects.Rectangle;
+  private playerManaBarBg!: Phaser.GameObjects.Rectangle;
 
   private mobs: Map<string, MobData> = new Map();
   private mobsContainer!: Phaser.GameObjects.Container;
 
   private playerState: 'idle' | 'attack' | 'hurt' = 'idle';
+  
+  // Responsive properties
+  private spriteScale = 3;
+  private isMobile = false;
 
   constructor() {
     super('Game');
@@ -47,19 +53,100 @@ export class Game extends Scene {
     const scene = this;
     const { nickname, currentHp, maxHp, currentMana, maxMana } = this.playerStore;
 
+    // Detect mobile
+    this.isMobile = this.scale.width < 768;
+    this.spriteScale = this.isMobile ? 2 : 3;
+
     // Background
     const bg = this.add.image(512, 384, 'background');
     bg.setInteractive();
-    this.scale.on('resize', (gameSize: any) => {
-      const { width, height } = gameSize;
-      bg.setPosition(width / 2, height / 2);
-      const scaleX = width / bg.width;
-      const scaleY = height / bg.height;
-      const scale = Math.max(scaleX, scaleY);
-      bg.setScale(scale);
-    });
+    
+    // Resize background
+    this.resizeBackground(bg);
 
     // Animations
+    this.createAnimations();
+
+    // Player setup
+    this.player = this.add.sprite(0, 0, 'PlayerIdle').setScale(this.spriteScale);
+    this.player.play('player-idle');
+    this.textures.get('PlayerIdle').setFilter(Phaser.Textures.NEAREST);
+
+    this.playerNameText = this.add
+      .text(0, 0, nickname, { 
+        fontSize: this.isMobile ? '14px' : '16px', 
+        color: '#fff', 
+        fontFamily: 'Arial' 
+      })
+      .setOrigin(0.5);
+
+    // HP and Mana bars for player
+    const barWidth = this.isMobile ? 80 : 100;
+    const barHeight = this.isMobile ? 8 : 10;
+    
+    this.playerHpBarBg = this.add.rectangle(0, 0, barWidth, barHeight, 0x000000).setOrigin(0, 0.5);
+    this.playerHpBar = this.add.rectangle(0, 0, (currentHp / maxHp) * barWidth, barHeight, 0xff0000).setOrigin(0, 0.5);
+
+    this.playerManaBarBg = this.add.rectangle(0, 0, barWidth, barHeight, 0x000000).setOrigin(0, 0.5);
+    this.playerManaBar = this.add.rectangle(0, 0, (currentMana / maxMana) * barWidth, barHeight, 0x0000ff).setOrigin(0, 0.5);
+
+    // Mobs container
+    this.mobsContainer = this.add.container(0, 0);
+
+    // Position all elements
+    this.repositionElements();
+
+    // Handle resize
+    this.scale.on('resize', (gameSize: any) => {
+      const { width, height } = gameSize;
+      
+      // Update mobile detection
+      const wasMobile = this.isMobile;
+      this.isMobile = width < 768;
+      
+      // Update sprite scale if device type changed
+      if (wasMobile !== this.isMobile) {
+        this.spriteScale = this.isMobile ? 2 : 3;
+        this.player.setScale(this.spriteScale);
+        
+        // Update all mob sprites
+        this.mobs.forEach(mob => {
+          mob.sprite?.setScale(this.spriteScale);
+        });
+        
+        // Update font size
+        this.playerNameText.setFontSize(this.isMobile ? 14 : 16);
+        
+        // Update bar widths
+        const barWidth = this.isMobile ? 80 : 100;
+        const barHeight = this.isMobile ? 8 : 10;
+        this.playerHpBarBg.setSize(barWidth, barHeight);
+        this.playerManaBarBg.setSize(barWidth, barHeight);
+      }
+      
+      // Resize background
+      this.resizeBackground(bg);
+      
+      // Reposition all elements
+      this.repositionElements();
+    });
+
+    // Socket event handlers
+    socket.on('battle_state', this.onBattleState);
+    socket.on('player_attacked', this.onPlayerAttacked);
+    socket.on('mob_attacked', this.onMobAttacked);
+    socket.on('skill_cast', this.onSkillCast);
+    socket.on('skill_failed', this.onSkillFailed);
+    socket.on('battle_end', this.onBattleEnd);
+
+    EventBus.emit('current-scene-ready', this);
+
+    this.updatePlayerHpBar();
+    this.updatePlayerManaBar();
+    this.events.on('shutdown', this.shutdown, this);
+  }
+
+  private createAnimations() {
     this.anims.create({
       key: 'player-idle',
       frames: this.anims.generateFrameNumbers('PlayerIdle', { start: 0, end: 9 }),
@@ -97,42 +184,78 @@ export class Game extends Scene {
       frameRate: 1,
       repeat: 0,
     });
+  }
 
-    // Player setup
-    this.player = this.add.sprite(scene.scale.width / 2 - 500, scene.scale.height / 2, 'PlayerIdle').setScale(3);
-    console.log('Has PlayerIdle texture?', this.textures.exists('PlayerIdle'));
-    this.player.play('player-idle');
-    this.textures.get('PlayerIdle').setFilter(Phaser.Textures.NEAREST);
+  private resizeBackground(bg: Phaser.GameObjects.Image) {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    bg.setPosition(width / 2, height / 2);
+    const scaleX = width / bg.width;
+    const scaleY = height / bg.height;
+    const scale = Math.max(scaleX, scaleY);
+    bg.setScale(scale);
+  }
 
-    this.playerNameText = this.add
-        .text(this.player.x, this.player.y - 60, nickname, { fontSize: '16px', color: '#fff', fontFamily: 'Arial' })
-        .setOrigin(0.5);
+  private repositionElements() {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const centerY = height / 2;
+    
+    // Calculate positions based on screen size
+    let playerX: number;
+    let mobBaseX: number;
+    
+    if (this.isMobile) {
+      // On mobile, position closer together and vertically if needed
+      if (width < 600) {
+        // Very small screens - stack vertically
+        playerX = width / 2;
+        mobBaseX = width / 2;
+      } else {
+        // Small screens - closer horizontal positioning
+        playerX = width * 0.25;
+        mobBaseX = width * 0.75;
+      }
+    } else {
+      // Desktop - use percentage-based positioning
+      playerX = width * 0.3;
+      mobBaseX = width * 0.7;
+    }
 
-    // HP and Mana bars for player
-    const hpBarBg = this.add.rectangle(this.player.x - 50, this.player.y - 40, 100, 10, 0x000000).setOrigin(0, 0.5);
-    this.playerHpBar = this.add.rectangle(this.player.x - 50, this.player.y - 40, (currentHp / maxHp) * 100, 10, 0xff0000).setOrigin(0, 0.5);
+    // Position player
+    this.player.setPosition(playerX, centerY);
+    
+    // Position player name
+    const nameOffsetY = this.isMobile ? -50 : -60;
+    this.playerNameText.setPosition(playerX, centerY + nameOffsetY);
+    
+    // Position HP bar
+    const barWidth = this.isMobile ? 80 : 100;
+    const hpOffsetY = this.isMobile ? -32 : -40;
+    const manaOffsetY = this.isMobile ? -22 : -28;
+    
+    this.playerHpBarBg.setPosition(playerX - barWidth / 2, centerY + hpOffsetY);
+    this.playerHpBar.setPosition(playerX - barWidth / 2, centerY + hpOffsetY);
+    
+    this.playerManaBarBg.setPosition(playerX - barWidth / 2, centerY + manaOffsetY);
+    this.playerManaBar.setPosition(playerX - barWidth / 2, centerY + manaOffsetY);
 
-    const manaBarBg = this.add.rectangle(this.player.x - 50, this.player.y - 28, 100, 10, 0x000000).setOrigin(0, 0.5);
-    this.playerManaBar = this.add.rectangle(this.player.x - 50, this.player.y - 28, (currentMana / maxMana) * 100, 10, 0x0000ff).setOrigin(0, 0.5);
+    // Reposition mobs
+    this.repositionMobs(mobBaseX, centerY);
+  }
 
-    // Mobs container
-    this.mobsContainer = this.add.container(0, 0);
-
-    // Socket event handlers
-    socket.on('battle_state', this.onBattleState);
-    socket.on('player_attacked', this.onPlayerAttacked);
-    socket.on('mob_attacked', this.onMobAttacked);
-    socket.on('skill_cast', this.onSkillCast);
-    socket.on('skill_failed', this.onSkillFailed);
-    socket.on('battle_end', this.onBattleEnd);
-
-    // Emit scene ready event for React or other parts
-    EventBus.emit('current-scene-ready', this);
-
-    // Initial update of player bars
-    this.updatePlayerHpBar();
-    this.updatePlayerManaBar();
-    this.events.on('shutdown', this.shutdown, this);
+  private repositionMobs(baseX: number, baseY: number) {
+    let index = 0;
+    const mobSpacing = this.isMobile ? 80 : 120;
+    
+    this.mobs.forEach((mob) => {
+      if (mob.container) {
+        // Position mobs horizontally or stack them
+        const offsetX = index * mobSpacing;
+        mob.container.setPosition(baseX + offsetX, baseY);
+      }
+      index++;
+    });
   }
 
   private onConnect = () => {
@@ -180,12 +303,12 @@ export class Game extends Scene {
   };
 
   private onSkillCast = ({
-                           value,
-                           skillName,
-                           targetHP,
-                           mpLeft,
-                           targetMobId,
-                         }: {
+    value,
+    skillName,
+    targetHP,
+    mpLeft,
+    targetMobId,
+  }: {
     value: number;
     skillName: string;
     targetHP: number;
@@ -219,6 +342,11 @@ export class Game extends Scene {
   };
 
   private syncMobs(mobsData: any[]) {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const centerY = height / 2;
+    const mobBaseX = this.isMobile ? (width < 600 ? width / 2 : width * 0.75) : width * 0.7;
+
     mobsData.forEach((mobData) => {
       let mob = this.mobs.get(mobData.id);
       if (!mob) {
@@ -230,23 +358,28 @@ export class Game extends Scene {
           state: 'idle',
         };
 
-        mob.sprite = this.add.sprite(0, 0, 'EnemyIdle').setScale(3);
+        mob.sprite = this.add.sprite(0, 0, 'EnemyIdle').setScale(this.spriteScale);
         mob.sprite.play('enemy-idle');
         this.textures.get('EnemyIdle').setFilter(Phaser.Textures.NEAREST);
         mob.sprite.setFlipX(true);
 
         const nameText = this.add
-            .text(0, -60, mob.name, {
-              fontSize: '16px',
-              color: '#ff4444',
-              fontFamily: 'Arial',
-            })
-            .setOrigin(0.5);
+          .text(0, this.isMobile ? -50 : -60, mob.name, {
+            fontSize: this.isMobile ? '14px' : '16px',
+            color: '#ff4444',
+            fontFamily: 'Arial',
+          })
+          .setOrigin(0.5);
 
-        const hpBarBg = this.add.rectangle(50, -40, 100, 10, 0x000000).setOrigin(1, 0.5);
-        const hpBar = this.add.rectangle(50, -40, 100, 10, 0xff0000).setOrigin(1, 0.5);
+        const barWidth = this.isMobile ? 80 : 100;
+        const barHeight = this.isMobile ? 8 : 10;
+        const hpOffsetY = this.isMobile ? -32 : -40;
 
-        mob.container = this.add.container(this.scale.width / 2 + 500 + this.mobs.size * 120, this.scale.height / 2, [
+        const hpBarBg = this.add.rectangle(barWidth / 2, hpOffsetY, barWidth, barHeight, 0x000000).setOrigin(1, 0.5);
+        const hpBar = this.add.rectangle(barWidth / 2, hpOffsetY, barWidth, barHeight, 0xff0000).setOrigin(1, 0.5);
+
+        const mobSpacing = this.isMobile ? 80 : 120;
+        mob.container = this.add.container(mobBaseX + this.mobs.size * mobSpacing, centerY, [
           mob.sprite,
           nameText,
           hpBarBg,
@@ -273,18 +406,21 @@ export class Game extends Scene {
 
   private updateMobHpBar(mob: MobData) {
     if (!mob.hpBar) return;
-    const width = 100 * (mob.currentHp / mob.maxHp);
-    mob.hpBar.width = Phaser.Math.Clamp(width, 0, 100);
+    const barWidth = this.isMobile ? 80 : 100;
+    const width = barWidth * (mob.currentHp / mob.maxHp);
+    mob.hpBar.width = Phaser.Math.Clamp(width, 0, barWidth);
   }
 
   private updatePlayerHpBar() {
-    const width = 100 * (this.playerStore.currentHp / this.playerStore.maxHp);
-    this.playerHpBar.width = Phaser.Math.Clamp(width, 0, 100);
+    const barWidth = this.isMobile ? 80 : 100;
+    const width = barWidth * (this.playerStore.currentHp / this.playerStore.maxHp);
+    this.playerHpBar.width = Phaser.Math.Clamp(width, 0, barWidth);
   }
 
   private updatePlayerManaBar() {
-    const width = 100 * (this.playerStore.currentMana / this.playerStore.maxMana);
-    this.playerManaBar.width = Phaser.Math.Clamp(width, 0, 100);
+    const barWidth = this.isMobile ? 80 : 100;
+    const width = barWidth * (this.playerStore.currentMana / this.playerStore.maxMana);
+    this.playerManaBar.width = Phaser.Math.Clamp(width, 0, barWidth);
   }
 
   private playPlayerAnimation(animKey: string) {
